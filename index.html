@@ -228,10 +228,49 @@ iframe,video{width:100%;height:100%}
     color: white;
     z-index: 2000;
     animation: slideIn 0.3s ease;
+    max-width: 400px;
 }
 @keyframes slideIn {
     from { transform: translateX(100%); opacity: 0; }
     to { transform: translateX(0); opacity: 1; }
+}
+
+/* Progress bar */
+.progress-container {
+    width: 100%;
+    height: 6px;
+    background: #333;
+    border-radius: 3px;
+    margin: 10px 0;
+    overflow: hidden;
+}
+.progress-bar {
+    height: 100%;
+    background: var(--red);
+    width: 0%;
+    transition: width 0.3s;
+}
+
+/* Loading overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+}
+.loading-content {
+    background: #1c1c1c;
+    padding: 30px;
+    border-radius: 12px;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
 }
 </style>
 </head>
@@ -296,6 +335,9 @@ iframe,video{width:100%;height:100%}
         <h3>Download Video</h3>
         <p id="downloadTitle"></p>
         <div id="qualityOptions" class="quality-options"></div>
+        <div class="progress-container" style="display:none">
+            <div id="progressBar" class="progress-bar"></div>
+        </div>
         <div id="statusMessage" class="status-message" style="display:none"></div>
         <div class="modal-actions">
             <button onclick="closeDownloadModal()">Cancel</button>
@@ -303,15 +345,26 @@ iframe,video{width:100%;height:100%}
     </div>
 </div>
 
+<div id="loadingOverlay" class="loading-overlay" style="display:none">
+    <div class="loading-content">
+        <div class="spinner"></div>
+        <h3 id="loadingText">Downloading Video...</h3>
+        <p id="loadingSubtext">This may take a minute</p>
+        <div class="progress-container">
+            <div id="globalProgressBar" class="progress-bar"></div>
+        </div>
+    </div>
+</div>
+
 <script>
-// IMPORTANT: You should NEVER expose API keys in client-side code
-// In production, use a backend server to make API calls
-// This is for demonstration purposes only
+// API Keys (Note: In production, these should be handled by a backend server)
 const YOUTUBE_API_KEY = "AIzaSyDqYX24XCcn9g9EPDHalINE0j6IkkTwKW4";
+const APIFY_API_TOKEN = "apify_api_u8g8fMN6iwqMItpqS1bdfpUL7vJ63B4uxPwB";
 
 let subs = new Set(JSON.parse(localStorage.getItem("subs") || "[]"));
 let offline = JSON.parse(localStorage.getItem("offline") || "[]");
 let currentDownloadVideo = null;
+let activeDownloads = new Map();
 
 function showPage(p) {
     document.querySelectorAll(".page").forEach(x => x.classList.remove("active"));
@@ -401,18 +454,20 @@ function openDownloadModal(video, videoId, e) {
     document.getElementById("downloadTitle").innerText = video.snippet.title;
     document.getElementById("downloadModal").classList.add("active");
     document.getElementById("statusMessage").style.display = "none";
+    document.querySelector(".progress-container").style.display = "none";
+    document.getElementById("progressBar").style.width = "0%";
     
     const qualityOptions = document.getElementById("qualityOptions");
     qualityOptions.innerHTML = `
-        <button class="quality-btn" onclick="simulateDownload('720p')">
+        <button class="quality-btn" onclick="startDownload('720p')">
             <div>HD 720p</div>
             <div class="quality-info">High quality, medium file size</div>
         </button>
-        <button class="quality-btn" onclick="simulateDownload('480p')">
+        <button class="quality-btn" onclick="startDownload('480p')">
             <div>SD 480p</div>
             <div class="quality-info">Good quality, smaller file size</div>
         </button>
-        <button class="quality-btn" onclick="simulateDownload('360p')">
+        <button class="quality-btn" onclick="startDownload('360p')">
             <div>360p</div>
             <div class="quality-info">Lower quality, smallest file size</div>
         </button>
@@ -424,57 +479,147 @@ function closeDownloadModal() {
     currentDownloadVideo = null;
 }
 
-// SIMULATED DOWNLOAD - In real app, you'd need a backend service
-function simulateDownload(quality) {
+async function startDownload(quality) {
     if (!currentDownloadVideo) return;
     
     const { video, videoId } = currentDownloadVideo;
-    const statusEl = document.getElementById("statusMessage");
-    statusEl.style.display = "block";
-    statusEl.className = "status-message";
-    statusEl.innerText = "Starting simulated download...";
+    const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
     
-    document.getElementById("qualityOptions").innerHTML = '<div class="spinner"></div>';
+    // Show loading overlay
+    document.getElementById("loadingOverlay").style.display = "flex";
+    document.getElementById("loadingText").innerText = "Starting download...";
+    document.getElementById("loadingSubtext").innerText = "Preparing to download your video";
+    document.getElementById("globalProgressBar").style.width = "5%";
     
-    // Simulate download process
-    setTimeout(() => {
-        statusEl.innerText = "Processing video metadata...";
+    try {
+        // Prepare Apify API request
+        const input = {
+            "videos": [
+                {
+                    "url": youtubeUrl
+                }
+            ],
+            "preferredQuality": quality,
+            "filenameTemplateParts": ["title"]
+        };
         
-        setTimeout(() => {
-            statusEl.innerText = "Preparing download...";
+        document.getElementById("loadingText").innerText = "Initializing Apify download...";
+        document.getElementById("globalProgressBar").style.width = "15%";
+        
+        // Start the Apify actor run
+        const runResponse = await fetch(`https://api.apify.com/v2/acts/streamers~youtube-video-downloader/runs?token=${APIFY_API_TOKEN}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(input)
+        });
+        
+        if (!runResponse.ok) {
+            throw new Error(`Failed to start download: ${runResponse.status}`);
+        }
+        
+        const runData = await runResponse.json();
+        const runId = runData.data.id;
+        
+        document.getElementById("loadingText").innerText = "Processing video...";
+        document.getElementById("loadingSubtext").innerText = "This may take 30-60 seconds";
+        document.getElementById("globalProgressBar").style.width = "30%";
+        
+        // Poll for completion
+        let downloadUrl = null;
+        let attempts = 0;
+        const maxAttempts = 60; // Max 2 minutes
+        
+        while (attempts < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, 2000));
             
-            setTimeout(() => {
-                // Create a simulated download entry
-                const offlineEntry = {
-                    id: videoId,
-                    snippet: video.snippet,
-                    quality: quality,
-                    downloadedAt: new Date().toISOString(),
-                    url: `https://www.youtube.com/watch?v=${videoId}`,
-                    simulated: true, // Mark as simulated since we can't actually download without backend
-                    thumbnail: video.snippet.thumbnails.medium?.url || video.snippet.thumbnails.default?.url
-                };
+            const statusResponse = await fetch(`https://api.apify.com/v2/acts/streamers~youtube-video-downloader/runs/${runId}?token=${APIFY_API_TOKEN}`);
+            const statusData = await statusResponse.json();
+            
+            if (statusData.data.status === 'SUCCEEDED') {
+                document.getElementById("globalProgressBar").style.width = "70%";
                 
-                offline.push(offlineEntry);
-                localStorage.setItem("offline", JSON.stringify(offline));
+                // Get the dataset items
+                const datasetId = statusData.data.defaultDatasetId;
+                const datasetResponse = await fetch(`https://api.apify.com/v2/datasets/${datasetId}/items?token=${APIFY_API_TOKEN}`);
+                const items = await datasetResponse.json();
                 
-                statusEl.className = "status-message success";
-                statusEl.innerText = `✓ Video added to offline library (simulated)!`;
-                
-                // Show toast notification
-                showToast(`"${video.snippet.title.substring(0, 50)}..." added to offline videos`, 'success');
-                
-                setTimeout(() => {
-                    closeDownloadModal();
-                    loadHome(document.getElementById("searchInput").value || "trending music");
-                    if (document.getElementById("offline-page").classList.contains("active")) {
-                        loadOffline();
-                    }
-                }, 1500);
-                
-            }, 1000);
+                if (items && items.length > 0 && items[0].downloadUrl) {
+                    downloadUrl = items[0].downloadUrl;
+                    break;
+                }
+            } else if (statusData.data.status === 'FAILED') {
+                throw new Error('Video processing failed on Apify server');
+            }
+            
+            attempts++;
+            const progress = 30 + Math.min(40, (attempts * 40 / maxAttempts));
+            document.getElementById("globalProgressBar").style.width = `${progress}%`;
+            document.getElementById("loadingSubtext").innerText = `Processing... ${attempts * 2}s elapsed`;
+        }
+        
+        if (!downloadUrl) {
+            throw new Error('Download URL not available after processing');
+        }
+        
+        document.getElementById("loadingText").innerText = "Downloading video file...";
+        document.getElementById("globalProgressBar").style.width = "80%";
+        
+        // Download the video
+        const videoResponse = await fetch(downloadUrl);
+        if (!videoResponse.ok) {
+            throw new Error(`Failed to fetch video from ${downloadUrl}`);
+        }
+        
+        const blob = await videoResponse.blob();
+        
+        // Create object URL for offline playback
+        const blobUrl = URL.createObjectURL(blob);
+        
+        // Save to offline storage
+        const offlineEntry = {
+            id: videoId,
+            snippet: video.snippet,
+            quality: quality,
+            downloadedAt: new Date().toISOString(),
+            url: youtubeUrl,
+            blobUrl: blobUrl,
+            filename: `${video.snippet.title.replace(/[^a-z0-9]/gi, '_').substring(0, 50)}.mp4`,
+            size: blob.size,
+            type: blob.type
+        };
+        
+        offline.push(offlineEntry);
+        localStorage.setItem("offline", JSON.stringify(offline));
+        
+        document.getElementById("globalProgressBar").style.width = "100%";
+        document.getElementById("loadingText").innerText = "Download complete!";
+        document.getElementById("loadingSubtext").innerText = "Video saved to offline library";
+        
+        // Close modals and update UI
+        setTimeout(() => {
+            document.getElementById("loadingOverlay").style.display = "none";
+            closeDownloadModal();
+            loadHome(document.getElementById("searchInput").value || "trending music");
+            loadOffline();
+            showToast(`"${video.snippet.title.substring(0, 50)}..." downloaded successfully!`, 'success');
         }, 1000);
-    }, 500);
+        
+    } catch (error) {
+        console.error('Download error:', error);
+        document.getElementById("loadingOverlay").style.display = "none";
+        showToast(`Download failed: ${error.message}`, 'error');
+        
+        // Show retry option in modal
+        const statusEl = document.getElementById("statusMessage");
+        statusEl.style.display = "block";
+        statusEl.className = "status-message error";
+        statusEl.innerHTML = `
+            Download failed: ${error.message}<br>
+            <button onclick="startDownload('${quality}')" style="margin-top:10px;background:var(--red)">Retry Download</button>
+        `;
+    }
 }
 
 function loadOffline() {
@@ -486,18 +631,23 @@ function loadOffline() {
     
     grid.innerHTML = "";
     offline.forEach((v, index) => {
+        const sizeMB = v.size ? ` • ${(v.size / (1024 * 1024)).toFixed(1)}MB` : '';
         const item = document.createElement("div");
         item.className = "offline-item";
         item.innerHTML = `
             <div onclick="playOffline(${index})" style="cursor:pointer;flex:1;display:flex;align-items:center;gap:15px">
-                <img src="${v.thumbnail || v.snippet.thumbnails?.default?.url}" style="width:80px;height:60px;border-radius:4px;object-fit:cover" alt="${v.snippet.title}">
+                <img src="${v.snippet.thumbnails?.medium?.url || v.snippet.thumbnails?.default?.url || 'https://via.placeholder.com/80x60/333/fff?text=No+Thumb'}" 
+                     style="width:80px;height:60px;border-radius:4px;object-fit:cover" 
+                     alt="${v.snippet.title}">
                 <div>
                     <b style="font-size:14px">${v.snippet.title}</b>
-                    <div class="video-channel">${v.snippet.channelTitle} • ${v.quality} • ${new Date(v.downloadedAt).toLocaleDateString()}</div>
-                    ${v.simulated ? '<small style="color:#888">(Simulated - needs backend for real download)</small>' : ''}
+                    <div class="video-channel">${v.snippet.channelTitle} • ${v.quality} • ${new Date(v.downloadedAt).toLocaleDateString()}${sizeMB}</div>
                 </div>
             </div>
-            <button class="delete-btn" onclick="deleteOffline(${index}, event)">Delete</button>
+            <div style="display:flex;gap:8px;">
+                <button onclick="downloadFile(${index})" style="background:#4285F4">Save File</button>
+                <button class="delete-btn" onclick="deleteOffline(${index}, event)">Delete</button>
+            </div>
         `;
         grid.appendChild(item);
     });
@@ -508,27 +658,47 @@ function playOffline(index) {
     if (!video) return;
     
     showPage("player");
-    if (video.simulated) {
-        // For simulated downloads, use YouTube embed
+    
+    if (video.blobUrl) {
+        // Play from downloaded blob
+        document.getElementById("player").innerHTML = `
+            <video controls autoplay style="width:100%;height:100%">
+                <source src="${video.blobUrl}" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>`;
+    } else {
+        // Fallback to YouTube embed
         document.getElementById("player").innerHTML = `
             <iframe src="https://www.youtube.com/embed/${video.id}?autoplay=1"
             allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
-        showToast('Note: Simulated download - playing from YouTube', 'info');
-    } else {
-        // If we had real downloads, we'd play the local file here
-        document.getElementById("player").innerHTML = `
-            <video controls autoplay style="width:100%;height:100%">
-                <source src="${video.url}" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>`;
     }
+    
     document.getElementById("playerTitle").innerText = video.snippet.title;
     document.getElementById("playerChannel").innerText = video.snippet.channelTitle;
 }
 
+function downloadFile(index) {
+    const video = offline[index];
+    if (!video || !video.blobUrl) return;
+    
+    const a = document.createElement('a');
+    a.href = video.blobUrl;
+    a.download = video.filename || `video_${video.id}.mp4`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    showToast(`"${video.snippet.title.substring(0, 30)}..." saved to downloads`, 'success');
+}
+
 function deleteOffline(index, e) {
     if (e) e.stopPropagation();
-    if (confirm("Delete this offline video?")) {
+    if (confirm("Delete this offline video? This cannot be undone.")) {
+        // Revoke blob URL to free memory
+        if (offline[index].blobUrl) {
+            URL.revokeObjectURL(offline[index].blobUrl);
+        }
+        
         offline.splice(index, 1);
         localStorage.setItem("offline", JSON.stringify(offline));
         loadOffline();
@@ -543,11 +713,10 @@ function loadSubs() {
         return;
     }
     
-    // For demo purposes, show a message
     grid.innerHTML = `
         <div class="empty-state">
             <h3>${subs.size} Channel${subs.size === 1 ? '' : 's'} Subscribed</h3>
-            <p>In a real app, this would show videos from your subscribed channels</p>
+            <p>Your subscribed channels appear on the Home page</p>
             <p><small>Subscribed Channel IDs: ${Array.from(subs).slice(0, 3).join(', ')}${subs.size > 3 ? '...' : ''}</small></p>
         </div>
     `;
@@ -596,13 +765,20 @@ function showToast(message, type = 'info') {
 window.onload = () => {
     loadHome();
     
-    // Add some sample offline videos if none exist
-    if (offline.length === 0) {
-        setTimeout(() => {
-            showToast('Tip: Click "Download" on any video to simulate offline download', 'info');
-        }, 2000);
-    }
+    // Show welcome message
+    setTimeout(() => {
+        showToast('Welcome to Kaitube! Click Download on any video to save it offline.', 'info');
+    }, 1500);
 };
+
+// Clean up blob URLs on page unload
+window.addEventListener('beforeunload', () => {
+    offline.forEach(video => {
+        if (video.blobUrl) {
+            URL.revokeObjectURL(video.blobUrl);
+        }
+    });
+});
 </script>
 
 </body>

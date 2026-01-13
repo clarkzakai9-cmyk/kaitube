@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kaitube - YouTube with Offline Downloads</title>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+<style>
+:root{
+    --bg:#000;
+    --red:#ff0050;
+    --panel:#111;
+    --border:#333;
+}
+*{box-sizing:border-box}
+html,body{
+    margin:0;
+    height:100%;
+    background:#000;
+    color:#fff;
+    font-family:system-ui,Segoe UI,Roboto,sans-serif;
+    overflow:hidden;
+}
+header{
+    height:60px;
+    background:#1a1a1a;
+    display:flex;
+    align-items:center;
+    padding:0 20px;
+    border-bottom:1px solid var(--border);
+}
+.logo{
+    color:var(--red);
+    font-weight:700;
+    cursor:pointer;
+    font-size:20px;
+}
+.search{
+    flex:1;
+    display:flex;
+    justify-content:center;
+    gap:10px;
+}
+.search input{
+    width:60%;
+    max-width:420px;
+    padding:8px 15px;
+    border-radius:20px;
+    background:#222;
+    border:1px solid #333;
+    color:#fff;
+}
+button{
+    background:#333;
+    border:none;
+    color:#fff;
+    padding:8px 16px;
+    border-radius:5px;
+    cursor:pointer;
+    transition:background 0.2s;
+}
+button:hover{background:#444}
+button:disabled{opacity:0.5;cursor:not-allowed}
+#app{
+    display:flex;
+    height:calc(100% - 60px);
+}
+nav{
+    width:220px;
+    background:#111;
+    border-right:1px solid var(--border);
+}
+.nav-item{
+    padding:14px 20px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+.nav-item.active,
+.nav-item:hover{background:#222}
+main{
+    flex:1;
+    overflow-y:auto;
+    padding:20px;
+}
+.page{display:none}
+.page.active{display:block}
+
+.video-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+    gap:20px;
+}
+.video-card{
+    background:#1c1c1c;
+    border-radius:8px;
+    overflow:hidden;
+    cursor:pointer;
+    transition:transform 0.2s;
+}
+.video-card:hover{transform:scale(1.02)}
+.video-card img{
+    width:100%;
+    height:160px;
+    object-fit:cover;
+}
+.video-info{padding:10px}
+.video-info b{
+    display:block;
+    margin-bottom:8px;
+    font-size:14px;
+    line-height:1.4;
+}
+.video-channel{
+    color:#aaa;
+    font-size:12px;
+    margin-bottom:8px;
+}
+.actions{
+    display:flex;
+    gap:8px;
+    margin-top:8px;
+    flex-wrap:wrap;
+}
+.actions button{
+    font-size:12px;
+    padding:6px 12px;
+}
+.subscribed{background:var(--red)!important}
+.offline{background:#4285F4!important}
+.downloading{background:#ff9800!important}
+.spinner{
+    width:40px;height:40px;
+    border-radius:50%;
+    border:4px solid #333;
+    border-top-color:var(--red);
+    animation:spin 1s linear infinite;
+    margin:40px auto;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+#player{
+    aspect-ratio:16/9;
+    background:#000;
+    margin-bottom:10px;
+    border-radius:8px;
+    overflow:hidden;
+}
+iframe,video{width:100%;height:100%}
+
+.download-modal{
+    display:none;
+    position:fixed;
+    top:0;left:0;right:0;bottom:0;
+    background:rgba(0,0,0,0.8);
+    z-index:1000;
+    align-items:center;
+    justify-content:center;
+}
+.download-modal.active{display:flex}
+.modal-content{
+    background:#1c1c1c;
+    padding:30px;
+    border-radius:12px;
+    max-width:500px;
+    width:90%;
+}
+.modal-content h3{margin-top:0}
+.quality-options{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    margin:20px 0;
+}
+.quality-btn{
+    width:100%;
+    text-align:left;
+    padding:12px;
+    background:#222;
+}
+.quality-btn:hover{background:#333}
+.quality-info{
+    font-size:12px;
+    color:#aaa;
+    margin-top:4px;
+}
+.modal-actions{
+    display:flex;
+    gap:10px;
+    justify-content:flex-end;
+}
+.status-message{
+    background:#222;
+    padding:10px;
+    border-radius:5px;
+    margin-top:10px;
+    font-size:14px;
+}
+.success{color:#4caf50}
+.error{color:#f44336}
+.offline-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:10px;
+    background:#222;
+    border-radius:5px;
+    margin-bottom:10px;
+}
+.delete-btn{
+    background:#f44336;
+    padding:6px 12px;
+}
+.empty-state{
+    text-align:center;
+    padding:60px 20px;
+    color:#666;
+}
+
+/* Toast notification */
+.toast {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 5px;
+    color: white;
+    z-index: 2000;
+    animation: slideIn 0.3s ease;
+}
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="logo" onclick="showPage('home')">🎬 Kaitube</div>
+    <div class="search">
+        <input id="searchInput" placeholder="Search videos" onkeypress="if(event.key==='Enter')search()">
+        <button onclick="search()">Search</button>
+    </div>
+</header>
+
+<div id="app">
+<nav>
+    <div class="nav-item active" onclick="showPage('home')">
+        <span class="material-icons-outlined">home</span>
+        Home
+    </div>
+    <div class="nav-item" onclick="showPage('subs')">
+        <span class="material-icons-outlined">subscriptions</span>
+        Subscriptions
+    </div>
+    <div class="nav-item" onclick="showPage('offline')">
+        <span class="material-icons-outlined">download</span>
+        Offline Videos
+    </div>
+</nav>
+
+<main>
+<section id="home-page" class="page active">
+    <div id="homeGrid" class="video-grid"><div class="spinner"></div></div>
+</section>
+
+<section id="subs-page" class="page">
+    <h2>Subscribed Channels</h2>
+    <div id="subsGrid" class="video-grid">
+        <div class="empty-state">
+            <h3>No Subscriptions</h3>
+            <p>Subscribe to channels to see them here!</p>
+        </div>
+    </div>
+</section>
+
+<section id="offline-page" class="page">
+    <h2>Offline Videos</h2>
+    <div id="offlineGrid"></div>
+</section>
+
+<section id="player-page" class="page">
+    <button onclick="showPage('home')">← Back</button>
+    <div id="player"></div>
+    <h2 id="playerTitle"></h2>
+    <p id="playerChannel" class="video-channel"></p>
+</section>
+</main>
+</div>
+
+<div id="downloadModal" class="download-modal">
+    <div class="modal-content">
+        <h3>Download Video</h3>
+        <p id="downloadTitle"></p>
+        <div id="qualityOptions" class="quality-options"></div>
+        <div id="statusMessage" class="status-message" style="display:none"></div>
+        <div class="modal-actions">
+            <button onclick="closeDownloadModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// IMPORTANT: You should NEVER expose API keys in client-side code
+// In production, use a backend server to make API calls
+// This is for demonstration purposes only
+const YOUTUBE_API_KEY = "AIzaSyDqYX24XCcn9g9EPDHalINE0j6IkkTwKW4";
+
+let subs = new Set(JSON.parse(localStorage.getItem("subs") || "[]"));
+let offline = JSON.parse(localStorage.getItem("offline") || "[]");
+let currentDownloadVideo = null;
+
+function showPage(p) {
+    document.querySelectorAll(".page").forEach(x => x.classList.remove("active"));
+    document.querySelectorAll(".nav-item").forEach(x => x.classList.remove("active"));
+    document.getElementById(p + "-page").classList.add("active");
+    document.querySelector(`[onclick="showPage('${p}')"]`)?.classList.add("active");
+    if (p === "subs") loadSubs();
+    if (p === "offline") loadOffline();
+}
+
+async function loadHome(q = "trending music") {
+    const grid = document.getElementById("homeGrid");
+    grid.innerHTML = '<div class="spinner"></div>';
+    try {
+        const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${encodeURIComponent(q)}&maxResults=12&key=${YOUTUBE_API_KEY}`);
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        const data = await res.json();
+        if (data.error) throw new Error(data.error.message);
+        render(grid, data.items);
+    } catch (error) {
+        console.error('Error loading videos:', error);
+        grid.innerHTML = `<p style="text-align:center;color:#f44336">Error loading videos. Please try again.<br><small>${error.message}</small></p>`;
+    }
+}
+
+function render(grid, items) {
+    if (!items || items.length === 0) {
+        grid.innerHTML = '<p style="text-align:center">No videos found. Try a different search.</p>';
+        return;
+    }
+    
+    grid.innerHTML = "";
+    items.forEach(v => {
+        const id = v.id.videoId || v.id;
+        const ch = v.snippet.channelId;
+        const isOffline = offline.find(o => o.id === id);
+        
+        const card = document.createElement("div");
+        card.className = "video-card";
+        card.innerHTML = `
+            <img src="${v.snippet.thumbnails.medium?.url || v.snippet.thumbnails.default?.url}" alt="${v.snippet.title}" onerror="this.src='https://via.placeholder.com/320x180/333/fff?text=No+Thumbnail'">
+            <div class="video-info">
+                <b>${v.snippet.title}</b>
+                <div class="video-channel">${v.snippet.channelTitle}</div>
+                <div class="actions">
+                    <button class="${subs.has(ch) ? "subscribed" : ""}"
+                        onclick="toggleSub('${ch}','${v.snippet.channelTitle.replace(/'/g, "\\'")}',event)">
+                        ${subs.has(ch) ? "✓ Subscribed" : "Subscribe"}
+                    </button>
+                    <button class="${isOffline ? "offline" : ""}"
+                        onclick='openDownloadModal(${JSON.stringify(v).replace(/'/g, "\\'")},"${id}",event)'>
+                        ${isOffline ? "✓ Downloaded" : "Download"}
+                    </button>
+                </div>
+            </div>`;
+        card.onclick = e => {
+            if (!e.target.closest(".actions")) {
+                play(id, v.snippet.title, v.snippet.channelTitle);
+            }
+        };
+        grid.appendChild(card);
+    });
+}
+
+function toggleSub(id, channelTitle, e) {
+    e.stopPropagation();
+    if (subs.has(id)) {
+        subs.delete(id);
+        showToast(`Unsubscribed from ${channelTitle}`, 'info');
+    } else {
+        subs.add(id);
+        showToast(`Subscribed to ${channelTitle}!`, 'success');
+    }
+    localStorage.setItem("subs", JSON.stringify([...subs]));
+    loadHome(document.getElementById("searchInput").value || "trending music");
+}
+
+function openDownloadModal(video, videoId, e) {
+    e.stopPropagation();
+    const isOffline = offline.find(o => o.id === videoId);
+    if (isOffline) {
+        showToast('Video already downloaded!', 'success');
+        return;
+    }
+    
+    currentDownloadVideo = { video, videoId };
+    document.getElementById("downloadTitle").innerText = video.snippet.title;
+    document.getElementById("downloadModal").classList.add("active");
+    document.getElementById("statusMessage").style.display = "none";
+    
+    const qualityOptions = document.getElementById("qualityOptions");
+    qualityOptions.innerHTML = `
+        <button class="quality-btn" onclick="simulateDownload('720p')">
+            <div>HD 720p</div>
+            <div class="quality-info">High quality, medium file size</div>
+        </button>
+        <button class="quality-btn" onclick="simulateDownload('480p')">
+            <div>SD 480p</div>
+            <div class="quality-info">Good quality, smaller file size</div>
+        </button>
+        <button class="quality-btn" onclick="simulateDownload('360p')">
+            <div>360p</div>
+            <div class="quality-info">Lower quality, smallest file size</div>
+        </button>
+    `;
+}
+
+function closeDownloadModal() {
+    document.getElementById("downloadModal").classList.remove("active");
+    currentDownloadVideo = null;
+}
+
+// SIMULATED DOWNLOAD - In real app, you'd need a backend service
+function simulateDownload(quality) {
+    if (!currentDownloadVideo) return;
+    
+    const { video, videoId } = currentDownloadVideo;
+    const statusEl = document.getElementById("statusMessage");
+    statusEl.style.display = "block";
+    statusEl.className = "status-message";
+    statusEl.innerText = "Starting simulated download...";
+    
+    document.getElementById("qualityOptions").innerHTML = '<div class="spinner"></div>';
+    
+    // Simulate download process
+    setTimeout(() => {
+        statusEl.innerText = "Processing video metadata...";
+        
+        setTimeout(() => {
+            statusEl.innerText = "Preparing download...";
+            
+            setTimeout(() => {
+                // Create a simulated download entry
+                const offlineEntry = {
+                    id: videoId,
+                    snippet: video.snippet,
+                    quality: quality,
+                    downloadedAt: new Date().toISOString(),
+                    url: `https://www.youtube.com/watch?v=${videoId}`,
+                    simulated: true, // Mark as simulated since we can't actually download without backend
+                    thumbnail: video.snippet.thumbnails.medium?.url || video.snippet.thumbnails.default?.url
+                };
+                
+                offline.push(offlineEntry);
+                localStorage.setItem("offline", JSON.stringify(offline));
+                
+                statusEl.className = "status-message success";
+                statusEl.innerText = `✓ Video added to offline library (simulated)!`;
+                
+                // Show toast notification
+                showToast(`"${video.snippet.title.substring(0, 50)}..." added to offline videos`, 'success');
+                
+                setTimeout(() => {
+                    closeDownloadModal();
+                    loadHome(document.getElementById("searchInput").value || "trending music");
+                    if (document.getElementById("offline-page").classList.contains("active")) {
+                        loadOffline();
+                    }
+                }, 1500);
+                
+            }, 1000);
+        }, 1000);
+    }, 500);
+}
+
+function loadOffline() {
+    const grid = document.getElementById("offlineGrid");
+    if (offline.length === 0) {
+        grid.innerHTML = '<div class="empty-state"><h3>No Offline Videos</h3><p>Download videos to watch them offline!</p></div>';
+        return;
+    }
+    
+    grid.innerHTML = "";
+    offline.forEach((v, index) => {
+        const item = document.createElement("div");
+        item.className = "offline-item";
+        item.innerHTML = `
+            <div onclick="playOffline(${index})" style="cursor:pointer;flex:1;display:flex;align-items:center;gap:15px">
+                <img src="${v.thumbnail || v.snippet.thumbnails?.default?.url}" style="width:80px;height:60px;border-radius:4px;object-fit:cover" alt="${v.snippet.title}">
+                <div>
+                    <b style="font-size:14px">${v.snippet.title}</b>
+                    <div class="video-channel">${v.snippet.channelTitle} • ${v.quality} • ${new Date(v.downloadedAt).toLocaleDateString()}</div>
+                    ${v.simulated ? '<small style="color:#888">(Simulated - needs backend for real download)</small>' : ''}
+                </div>
+            </div>
+            <button class="delete-btn" onclick="deleteOffline(${index}, event)">Delete</button>
+        `;
+        grid.appendChild(item);
+    });
+}
+
+function playOffline(index) {
+    const video = offline[index];
+    if (!video) return;
+    
+    showPage("player");
+    if (video.simulated) {
+        // For simulated downloads, use YouTube embed
+        document.getElementById("player").innerHTML = `
+            <iframe src="https://www.youtube.com/embed/${video.id}?autoplay=1"
+            allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+        showToast('Note: Simulated download - playing from YouTube', 'info');
+    } else {
+        // If we had real downloads, we'd play the local file here
+        document.getElementById("player").innerHTML = `
+            <video controls autoplay style="width:100%;height:100%">
+                <source src="${video.url}" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>`;
+    }
+    document.getElementById("playerTitle").innerText = video.snippet.title;
+    document.getElementById("playerChannel").innerText = video.snippet.channelTitle;
+}
+
+function deleteOffline(index, e) {
+    if (e) e.stopPropagation();
+    if (confirm("Delete this offline video?")) {
+        offline.splice(index, 1);
+        localStorage.setItem("offline", JSON.stringify(offline));
+        loadOffline();
+        showToast('Video removed from offline library', 'info');
+    }
+}
+
+function loadSubs() {
+    const grid = document.getElementById("subsGrid");
+    if (subs.size === 0) {
+        grid.innerHTML = '<div class="empty-state"><h3>No Subscriptions</h3><p>Subscribe to channels to see them here!</p></div>';
+        return;
+    }
+    
+    // For demo purposes, show a message
+    grid.innerHTML = `
+        <div class="empty-state">
+            <h3>${subs.size} Channel${subs.size === 1 ? '' : 's'} Subscribed</h3>
+            <p>In a real app, this would show videos from your subscribed channels</p>
+            <p><small>Subscribed Channel IDs: ${Array.from(subs).slice(0, 3).join(', ')}${subs.size > 3 ? '...' : ''}</small></p>
+        </div>
+    `;
+}
+
+function play(id, title, channel) {
+    showPage("player");
+    document.getElementById("player").innerHTML = `
+        <iframe src="https://www.youtube.com/embed/${id}?autoplay=1"
+        allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+    document.getElementById("playerTitle").innerText = title;
+    document.getElementById("playerChannel").innerText = channel;
+}
+
+function search() {
+    const query = document.getElementById("searchInput").value.trim();
+    if (query) {
+        loadHome(query);
+    } else {
+        loadHome("trending music");
+    }
+}
+
+function showToast(message, type = 'info') {
+    // Remove existing toast
+    const existingToast = document.querySelector('.toast');
+    if (existingToast) existingToast.remove();
+    
+    // Create new toast
+    const toast = document.createElement('div');
+    toast.className = `toast`;
+    toast.style.background = type === 'success' ? '#4caf50' : 
+                            type === 'error' ? '#f44336' : '#2196f3';
+    toast.innerText = message;
+    document.body.appendChild(toast);
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// Initialize the app
+window.onload = () => {
+    loadHome();
+    
+    // Add some sample offline videos if none exist
+    if (offline.length === 0) {
+        setTimeout(() => {
+            showToast('Tip: Click "Download" on any video to simulate offline download', 'info');
+        }, 2000);
+    }
+};
+</script>
+
+</body>
+</html>

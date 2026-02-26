@@ -3,783 +3,924 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kaitube - YouTube with Offline Downloads</title>
-<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+<title>KaiTube</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{
-    --bg:#000;
-    --red:#ff0050;
-    --panel:#111;
-    --border:#333;
-}
-*{box-sizing:border-box}
-html,body{
-    margin:0;
-    height:100%;
-    background:#000;
-    color:#fff;
-    font-family:system-ui,Segoe UI,Roboto,sans-serif;
-    overflow:hidden;
-}
-header{
-    height:60px;
-    background:#1a1a1a;
-    display:flex;
-    align-items:center;
-    padding:0 20px;
+  :root {
+    --bg:#0f0f0f; --bg2:#181818; --bg3:#272727; --bg4:#3f3f3f;
+    --text:#f1f1f1; --text2:#aaa; --text3:#717171;
+    --accent:#ff0040; --accent2:#ff3366;
+    --border:#2a2a2a; --sidebar:240px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;overflow-x:hidden;}
+  a{color:inherit;text-decoration:none;}
+  button{cursor:pointer;border:none;background:none;color:inherit;font-family:inherit;}
+  ::-webkit-scrollbar{width:7px;}
+  ::-webkit-scrollbar-track{background:var(--bg);}
+  ::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:4px;}
+
+  /* HEADER */
+  header{
+    position:fixed;top:0;left:0;right:0;z-index:100;height:56px;
+    background:var(--bg);display:flex;align-items:center;
+    justify-content:space-between;padding:0 16px;
     border-bottom:1px solid var(--border);
-}
-.logo{
-    color:var(--red);
-    font-weight:700;
-    cursor:pointer;
-    font-size:20px;
-}
-.search{
-    flex:1;
-    display:flex;
-    justify-content:center;
-    gap:10px;
-}
-.search input{
-    width:60%;
-    max-width:420px;
-    padding:8px 15px;
+  }
+  .logo{
+    display:flex;align-items:center;gap:6px;cursor:pointer;
+    font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;white-space:nowrap;
+  }
+  .logo-icon{
+    width:32px;height:22px;background:var(--accent);border-radius:6px;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .logo-icon::after{
+    content:'';border-left:10px solid #fff;
+    border-top:6px solid transparent;border-bottom:6px solid transparent;margin-left:2px;
+  }
+  .logo span{color:var(--accent);}
+  .search-form{
+    display:flex;align-items:center;flex:1;max-width:580px;margin:0 32px;
+  }
+  .search-input{
+    flex:1;height:38px;padding:0 16px;background:var(--bg2);
+    border:1px solid var(--bg4);border-right:none;border-radius:20px 0 0 20px;
+    color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;
+    transition:border-color .2s;
+  }
+  .search-input:focus{border-color:var(--accent);}
+  .search-btn{
+    height:38px;width:56px;background:var(--bg3);border:1px solid var(--bg4);
+    border-radius:0 20px 20px 0;display:flex;align-items:center;justify-content:center;
+    transition:background .2s;
+  }
+  .search-btn:hover{background:var(--bg4);}
+  .search-btn svg{width:18px;height:18px;fill:var(--text2);}
+  .header-right{display:flex;align-items:center;gap:8px;}
+  .icon-btn{
+    width:40px;height:40px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;transition:background .2s;
+  }
+  .icon-btn:hover{background:var(--bg3);}
+  .icon-btn svg{width:22px;height:22px;fill:var(--text);}
+  .avatar{
+    width:34px;height:34px;border-radius:50%;flex-shrink:0;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:14px;cursor:pointer;
+  }
+
+  /* SIDEBAR */
+  aside{
+    position:fixed;top:56px;left:0;bottom:0;width:var(--sidebar);
+    background:var(--bg);overflow-y:auto;z-index:90;padding:12px 0;
+  }
+  .nav-item{
+    display:flex;align-items:center;gap:16px;padding:10px 24px;
+    border-radius:10px;margin:1px 8px;font-size:13.5px;font-weight:500;
+    transition:background .15s;cursor:pointer;color:var(--text2);
+  }
+  .nav-item:hover,.nav-item.active{background:var(--bg3);color:var(--text);}
+  .nav-item svg{width:22px;height:22px;fill:currentColor;flex-shrink:0;}
+  .nav-divider{border-top:1px solid var(--border);margin:12px 0;}
+  .nav-section-title{
+    padding:6px 24px;font-size:11px;font-weight:700;
+    color:var(--text3);text-transform:uppercase;letter-spacing:.9px;
+  }
+  .sub-item{
+    display:flex;align-items:center;gap:12px;padding:8px 24px;cursor:pointer;
+    font-size:13px;transition:background .15s;border-radius:8px;
+    margin:1px 8px;color:var(--text2);
+  }
+  .sub-item:hover{background:var(--bg3);color:var(--text);}
+  .sub-avatar{width:26px;height:26px;border-radius:50%;flex-shrink:0;}
+
+  /* MAIN */
+  main{margin-left:var(--sidebar);margin-top:56px;padding:24px;min-height:calc(100vh - 56px);}
+
+  /* CHIPS */
+  .chips{display:flex;gap:10px;overflow-x:auto;margin-bottom:20px;padding-bottom:4px;scrollbar-width:none;}
+  .chips::-webkit-scrollbar{display:none;}
+  .chip{
+    flex-shrink:0;padding:8px 16px;border-radius:8px;background:var(--bg3);
+    color:var(--text2);font-size:13.5px;font-weight:500;cursor:pointer;
+    transition:background .15s,color .15s;
+  }
+  .chip:hover{background:var(--bg4);color:var(--text);}
+  .chip.active{background:var(--text);color:var(--bg);}
+
+  /* VIDEO GRID */
+  .video-grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px 16px;
+  }
+  .video-card{cursor:pointer;}
+  .thumb-wrap{
+    position:relative;border-radius:12px;overflow:hidden;
+    aspect-ratio:16/9;background:var(--bg3);
+  }
+  .thumb-wrap img{width:100%;height:100%;object-fit:cover;transition:transform .3s;}
+  .video-card:hover .thumb-wrap img{transform:scale(1.04);}
+  .duration{
+    position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.85);
+    color:#fff;font-size:11.5px;font-weight:700;padding:2px 6px;border-radius:4px;
+  }
+  .card-info{display:flex;gap:12px;margin-top:12px;}
+  .ch-avatar{width:36px;height:36px;border-radius:50%;flex-shrink:0;margin-top:2px;}
+  .card-text h3{
+    font-size:14px;font-weight:600;line-height:1.4;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  }
+  .card-text p{font-size:12.5px;color:var(--text3);margin-top:4px;line-height:1.5;}
+
+  /* SKELETON */
+  .skeleton{background:var(--bg2);border-radius:12px;overflow:hidden;animation:pulse 1.6s infinite;}
+  .skel-thumb{aspect-ratio:16/9;}
+  .skel-line{height:12px;border-radius:6px;background:var(--bg3);margin:10px 12px;}
+  .skel-line.short{width:55%;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+  .error-msg{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text3);}
+  .error-msg h2{font-size:22px;margin-bottom:8px;color:var(--text2);}
+
+  /* PLAYER PAGE */
+  #player-page{
+    display:none;margin-left:var(--sidebar);margin-top:56px;padding:24px;
+  }
+  .player-layout{display:flex;gap:24px;}
+  .player-main{flex:1;min-width:0;}
+
+  .player-container{
+    width:100%;aspect-ratio:16/9;background:#000;border-radius:14px;
+    overflow:hidden;position:relative;
+  }
+  #player-iframe{width:100%;height:100%;border:none;display:block;}
+
+  /* Error fallback inside player */
+  .player-fallback{
+    display:none;position:absolute;inset:0;background:#111;border-radius:14px;
+    flex-direction:column;align-items:center;justify-content:center;
+    gap:16px;text-align:center;padding:24px;
+  }
+  .player-fallback.show{display:flex;}
+  .player-fallback p{color:var(--text2);font-size:14px;max-width:300px;line-height:1.7;}
+  .watch-yt-btn{
+    display:inline-flex;align-items:center;gap:10px;
+    padding:12px 28px;border-radius:8px;background:var(--accent);
+    color:#fff;font-weight:700;font-size:14px;cursor:pointer;transition:opacity .2s;
+  }
+  .watch-yt-btn:hover{opacity:.85;}
+
+  /* VIDEO META */
+  .video-title-box{margin:16px 0 10px;}
+  .video-title{font-size:19px;font-weight:700;line-height:1.35;}
+  .video-meta-row{
+    display:flex;align-items:center;justify-content:space-between;
+    flex-wrap:wrap;gap:10px;margin-bottom:14px;
+  }
+  .meta-left{font-size:13.5px;color:var(--text3);}
+  .action-btns{display:flex;gap:8px;flex-wrap:wrap;}
+  .action-btn{
+    display:flex;align-items:center;gap:7px;padding:8px 16px;
+    border-radius:20px;background:var(--bg3);font-size:13px;font-weight:600;
+    transition:background .2s;white-space:nowrap;
+  }
+  .action-btn:hover{background:var(--bg4);}
+  .action-btn svg{width:17px;height:17px;fill:currentColor;flex-shrink:0;}
+  .action-btn.liked{background:var(--accent);color:#fff;}
+  .like-left{border-radius:20px 0 0 20px;}
+  .dislike-right{border-radius:0 20px 20px 0;padding:8px 14px;}
+
+  /* DOWNLOAD DROPDOWN */
+  .dl-wrap{position:relative;}
+  .dl-btn{
+    background:linear-gradient(135deg,#165c2e,#0d3d1c);color:#5cff96;
     border-radius:20px;
-    background:#222;
-    border:1px solid #333;
-    color:#fff;
-}
-button{
-    background:#333;
-    border:none;
-    color:#fff;
-    padding:8px 16px;
-    border-radius:5px;
-    cursor:pointer;
-    transition:background 0.2s;
-}
-button:hover{background:#444}
-button:disabled{opacity:0.5;cursor:not-allowed}
-#app{
-    display:flex;
-    height:calc(100% - 60px);
-}
-nav{
-    width:220px;
-    background:#111;
-    border-right:1px solid var(--border);
-}
-.nav-item{
-    padding:14px 20px;
-    cursor:pointer;
-    display:flex;
-    align-items:center;
-    gap:10px;
-}
-.nav-item.active,
-.nav-item:hover{background:#222}
-main{
-    flex:1;
-    overflow-y:auto;
-    padding:20px;
-}
-.page{display:none}
-.page.active{display:block}
+  }
+  .dl-btn:hover{background:linear-gradient(135deg,#1e7a3d,#115229);color:#7dffaa;}
+  .dl-menu{
+    position:absolute;top:calc(100% + 8px);right:0;
+    background:var(--bg2);border:1px solid var(--border);border-radius:12px;
+    padding:8px;min-width:210px;z-index:300;
+    display:none;flex-direction:column;gap:2px;
+    box-shadow:0 12px 32px rgba(0,0,0,.7);
+  }
+  .dl-menu.open{display:flex;}
+  .dl-opt{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+    padding:10px 14px;border-radius:8px;font-size:13.5px;
+    cursor:pointer;transition:background .15s;color:var(--text);
+  }
+  .dl-opt:hover{background:var(--bg3);}
+  .dl-badge{
+    font-size:10px;padding:2px 7px;border-radius:10px;
+    background:var(--bg4);color:var(--text2);font-weight:700;flex-shrink:0;
+  }
+  .dl-badge.green{background:#163d24;color:#5cff96;}
 
-.video-grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
-    gap:20px;
-}
-.video-card{
-    background:#1c1c1c;
-    border-radius:8px;
-    overflow:hidden;
-    cursor:pointer;
-    transition:transform 0.2s;
-}
-.video-card:hover{transform:scale(1.02)}
-.video-card img{
-    width:100%;
-    height:160px;
-    object-fit:cover;
-}
-.video-info{padding:10px}
-.video-info b{
-    display:block;
-    margin-bottom:8px;
-    font-size:14px;
-    line-height:1.4;
-}
-.video-channel{
-    color:#aaa;
-    font-size:12px;
-    margin-bottom:8px;
-}
-.actions{
-    display:flex;
-    gap:8px;
-    margin-top:8px;
-    flex-wrap:wrap;
-}
-.actions button{
-    font-size:12px;
-    padding:6px 12px;
-}
-.subscribed{background:var(--red)!important}
-.offline{background:#4285F4!important}
-.downloading{background:#ff9800!important}
-.spinner{
-    width:40px;height:40px;
-    border-radius:50%;
-    border:4px solid #333;
-    border-top-color:var(--red);
-    animation:spin 1s linear infinite;
-    margin:40px auto;
-}
-@keyframes spin{to{transform:rotate(360deg)}}
+  .subscribe-btn{
+    padding:9px 20px;border-radius:20px;background:var(--text);
+    color:var(--bg);font-weight:700;font-size:13.5px;white-space:nowrap;
+    transition:opacity .2s;
+  }
+  .subscribe-btn:hover{opacity:.85;}
+  .subscribe-btn.subbed{background:var(--bg3);color:var(--text);}
 
-#player{
-    aspect-ratio:16/9;
-    background:#000;
-    margin-bottom:10px;
-    border-radius:8px;
-    overflow:hidden;
-}
-iframe,video{width:100%;height:100%}
+  .channel-row{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 0;border-top:1px solid var(--border);
+    border-bottom:1px solid var(--border);margin-bottom:16px;
+  }
+  .channel-info{display:flex;align-items:center;gap:12px;}
+  .channel-avatar{
+    width:44px;height:44px;border-radius:50%;
+    background:linear-gradient(135deg,var(--accent),#ff6600);
+  }
+  .channel-name{font-weight:700;font-size:15px;}
+  .channel-subs{font-size:12.5px;color:var(--text3);margin-top:2px;}
 
-.download-modal{
-    display:none;
-    position:fixed;
-    top:0;left:0;right:0;bottom:0;
-    background:rgba(0,0,0,0.8);
-    z-index:1000;
-    align-items:center;
-    justify-content:center;
-}
-.download-modal.active{display:flex}
-.modal-content{
-    background:#1c1c1c;
-    padding:30px;
-    border-radius:12px;
-    max-width:500px;
-    width:90%;
-}
-.modal-content h3{margin-top:0}
-.quality-options{
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-    margin:20px 0;
-}
-.quality-btn{
-    width:100%;
-    text-align:left;
-    padding:12px;
-    background:#222;
-}
-.quality-btn:hover{background:#333}
-.quality-info{
-    font-size:12px;
-    color:#aaa;
-    margin-top:4px;
-}
-.modal-actions{
-    display:flex;
-    gap:10px;
-    justify-content:flex-end;
-}
-.status-message{
-    background:#222;
-    padding:10px;
-    border-radius:5px;
-    margin-top:10px;
-    font-size:14px;
-}
-.success{color:#4caf50}
-.error{color:#f44336}
-.offline-item{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:10px;
-    background:#222;
-    border-radius:5px;
-    margin-bottom:10px;
-}
-.delete-btn{
-    background:#f44336;
-    padding:6px 12px;
-}
-.empty-state{
-    text-align:center;
-    padding:60px 20px;
-    color:#666;
-}
+  .desc-box{
+    background:var(--bg2);border-radius:12px;padding:14px 16px;
+    font-size:13.5px;line-height:1.65;color:var(--text2);
+    white-space:pre-wrap;cursor:pointer;transition:background .2s;
+  }
+  .desc-box:hover{background:var(--bg3);}
+  .desc-box.collapsed{max-height:80px;overflow:hidden;position:relative;}
+  .desc-box.collapsed::after{
+    content:'';position:absolute;bottom:0;left:0;right:0;height:40px;
+    background:linear-gradient(transparent,var(--bg2));border-radius:0 0 12px 12px;
+  }
+  .desc-toggle{
+    color:var(--text2);font-weight:700;cursor:pointer;margin-top:8px;
+    display:inline-block;font-size:13px;
+  }
+  .desc-toggle:hover{color:var(--text);}
 
-/* Toast notification */
-.toast {
-    position: fixed;
-    top: 80px;
-    right: 20px;
-    padding: 12px 20px;
-    border-radius: 5px;
-    color: white;
-    z-index: 2000;
-    animation: slideIn 0.3s ease;
-    max-width: 400px;
-}
-@keyframes slideIn {
-    from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-}
+  .comments-section{margin-top:24px;}
+  .comments-title{font-size:18px;font-weight:700;margin-bottom:20px;}
+  .comment{display:flex;gap:12px;margin-bottom:22px;}
+  .comment-avatar{width:36px;height:36px;border-radius:50%;flex-shrink:0;}
+  .comment-body h4{font-size:13px;font-weight:700;margin-bottom:5px;}
+  .comment-text{font-size:14px;color:var(--text2);line-height:1.55;}
+  .comment-actions{display:flex;gap:16px;margin-top:8px;}
+  .comment-actions span{font-size:12.5px;color:var(--text3);cursor:pointer;}
+  .comment-actions span:hover{color:var(--text);}
 
-/* Progress bar */
-.progress-container {
-    width: 100%;
-    height: 6px;
-    background: #333;
-    border-radius: 3px;
-    margin: 10px 0;
-    overflow: hidden;
-}
-.progress-bar {
-    height: 100%;
-    background: var(--red);
-    width: 0%;
-    transition: width 0.3s;
-}
+  .related-sidebar{width:360px;flex-shrink:0;}
+  .related-title{font-size:16px;font-weight:700;margin-bottom:14px;}
+  .rel-card{display:flex;gap:10px;margin-bottom:12px;cursor:pointer;}
+  .rel-thumb{
+    width:160px;aspect-ratio:16/9;border-radius:8px;background:var(--bg3);
+    flex-shrink:0;overflow:hidden;position:relative;
+  }
+  .rel-thumb img{width:100%;height:100%;object-fit:cover;transition:transform .3s;}
+  .rel-card:hover .rel-thumb img{transform:scale(1.05);}
+  .rel-thumb .duration{font-size:10.5px;}
+  .rel-info{flex:1;min-width:0;}
+  .rel-info h4{
+    font-size:13px;font-weight:600;line-height:1.4;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  }
+  .rel-info p{font-size:11.5px;color:var(--text3);margin-top:4px;}
 
-/* Loading overlay */
-.loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 3000;
-}
-.loading-content {
-    background: #1c1c1c;
-    padding: 30px;
-    border-radius: 12px;
-    text-align: center;
-    max-width: 400px;
-    width: 90%;
-}
+  .spinner{
+    width:36px;height:36px;border:3px solid var(--bg4);border-top-color:var(--accent);
+    border-radius:50%;animation:spin .8s linear infinite;margin:48px auto;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(16px);
+    background:var(--bg3);color:var(--text);padding:12px 24px;border-radius:8px;
+    font-size:14px;font-weight:500;opacity:0;transition:all .3s;z-index:999;
+    border:1px solid var(--border);pointer-events:none;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  @media(max-width:1100px){.related-sidebar{width:300px;}.rel-thumb{width:130px;}}
+  @media(max-width:900px){
+    aside{display:none;}
+    main,#player-page{margin-left:0;}
+    .player-layout{flex-direction:column;}
+    .related-sidebar{width:100%;}
+    .search-form{max-width:none;margin:0 10px;}
+  }
+  @media(max-width:600px){
+    .video-grid{grid-template-columns:1fr;}
+    .action-btns{gap:6px;}
+    .action-btn{padding:7px 12px;font-size:12px;}
+    .video-title{font-size:16px;}
+  }
 </style>
 </head>
-
 <body>
 
+<!-- HEADER -->
 <header>
-    <div class="logo" onclick="showPage('home')">🎬 Kaitube</div>
-    <div class="search">
-        <input id="searchInput" placeholder="Search videos" onkeypress="if(event.key==='Enter')search()">
-        <button onclick="search()">Search</button>
-    </div>
+  <div class="logo" onclick="goHome()">
+    <div class="logo-icon"></div>
+    Kai<span>Tube</span>
+  </div>
+
+  <form class="search-form" onsubmit="handleSearch(event)">
+    <input class="search-input" id="search-input" type="text" placeholder="Search KaiTube...">
+    <button class="search-btn" type="submit">
+      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+    </button>
+  </form>
+
+  <div class="header-right">
+    <button class="icon-btn" onclick="showToast('🔔 No new notifications')">
+      <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+    </button>
+    <button class="icon-btn" onclick="showToast('✨ Upload coming soon!')">
+      <svg viewBox="0 0 24 24"><path d="M17 12h-5v5h-2v-5H5v-2h5V5h2v5h5v2zm2-9H5C3.9 3 3 3.9 3 5v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>
+    </button>
+    <div class="avatar">K</div>
+  </div>
 </header>
 
-<div id="app">
-<nav>
-    <div class="nav-item active" onclick="showPage('home')">
-        <span class="material-icons-outlined">home</span>
-        Home
-    </div>
-    <div class="nav-item" onclick="showPage('subs')">
-        <span class="material-icons-outlined">subscriptions</span>
-        Subscriptions
-    </div>
-    <div class="nav-item" onclick="showPage('offline')">
-        <span class="material-icons-outlined">download</span>
-        Offline Videos
-    </div>
-</nav>
+<!-- SIDEBAR -->
+<aside>
+  <div class="nav-item active" id="nav-home" onclick="goHome()">
+    <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>Home
+  </div>
+  <div class="nav-item" id="nav-trending" onclick="loadCategory('trending',this)">
+    <svg viewBox="0 0 24 24"><path d="M17.53 11.2c-.23-.3-.5-.56-.76-.82-.65-.6-1.4-1.03-2.03-1.66C13.3 7.26 13 4.85 13.91 3c-.91.23-1.75.75-2.45 1.32C8.9 6.4 8.02 9.6 9.07 12.17c.03.07.06.14.06.22 0 .19-.12.35-.29.42-.19.08-.39.03-.53-.09-.04-.03-.07-.06-.1-.1-.33-.43-.6-.91-.78-1.42C6.9 11.07 6.85 10.7 6.9 10.4c-.7.7-1.28 1.56-1.62 2.55-.45 1.27-.5 2.65-.14 3.94.36 1.29 1.12 2.44 2.14 3.25.97.77 2.16 1.33 3.42 1.48 1.67.18 3.43-.2 4.74-1.25.23-.19.46-.4.67-.61.64-.65 1.18-1.43 1.47-2.28.33-.92.38-1.93.17-2.89-.2-.93-.67-1.8-1.22-2.59z"/></svg>Trending
+  </div>
+  <div class="nav-item" id="nav-gaming" onclick="loadCategory('gaming',this)">
+    <svg viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H9v2H7v-2H5v-2h2V9h2v2h2v2zm4.5 1c-.83 0-1.5-.67-1.5-1.5S14.67 11 15.5 11s1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm3-3c-.83 0-1.5-.67-1.5-1.5S17.67 8 18.5 8s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>Gaming
+  </div>
+  <div class="nav-item" id="nav-music" onclick="loadCategory('music',this)">
+    <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>Music
+  </div>
+  <div class="nav-item" id="nav-news" onclick="loadCategory('news',this)">
+    <svg viewBox="0 0 24 24"><path d="M21 4H3c-1.1 0-2 .9-2 2v13c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-9 13H3v-4h9v4zm0-6H3V7h9v4zm9 6h-7V7h7v10z"/></svg>News
+  </div>
+  <div class="nav-item" id="nav-sports" onclick="loadCategory('sports',this)">
+    <svg viewBox="0 0 24 24"><path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 13.9l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1l-5.2 2.2v4.7h2v-3.4l1.8-.7-1.6 8.1-4.9-1-.4 2 7 1.4z"/></svg>Sports
+  </div>
+  <div class="nav-item" id="nav-science" onclick="loadCategory('science',this)">
+    <svg viewBox="0 0 24 24"><path d="M6.5 10h-2v7h2v-7zm6 0h-2v7h2v-7zm8.5 9H2v2h19v-2zm-2.5-9h-2v7h2v-7zM11.5 1L2 6v2h19V6l-9.5-5z"/></svg>Learning
+  </div>
+  <div class="nav-divider"></div>
+  <div class="nav-section-title">You</div>
+  <div class="nav-item" onclick="showToast('📺 History coming soon!')">
+    <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>History
+  </div>
+  <div class="nav-item" onclick="showToast('🕐 Watch Later coming soon!')">
+    <svg viewBox="0 0 24 24"><path d="M22 3H2v6h1v13h18V9h1V3zm-3 17H5V9h14v11zm1-13H4V5h16v2zm-8 4h-2v4h4v-2h-2z"/></svg>Watch Later
+  </div>
+  <div class="nav-item" onclick="showToast('👍 Liked Videos coming soon!')">
+    <svg viewBox="0 0 24 24"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>Liked Videos
+  </div>
+  <div class="nav-divider"></div>
+  <div class="nav-section-title">Subscriptions</div>
+  <div class="sub-item"><div class="sub-avatar" style="background:linear-gradient(135deg,#ff4444,#aa0000)"></div>Top Channel</div>
+  <div class="sub-item"><div class="sub-avatar" style="background:linear-gradient(135deg,#44aaff,#0044aa)"></div>Daily Dose</div>
+  <div class="sub-item"><div class="sub-avatar" style="background:linear-gradient(135deg,#44ff88,#00aa44)"></div>Tech Reviews</div>
+  <div class="sub-item"><div class="sub-avatar" style="background:linear-gradient(135deg,#ffaa00,#ff5500)"></div>Creative Hub</div>
+</aside>
 
-<main>
-<section id="home-page" class="page active">
-    <div id="homeGrid" class="video-grid"><div class="spinner"></div></div>
-</section>
-
-<section id="subs-page" class="page">
-    <h2>Subscribed Channels</h2>
-    <div id="subsGrid" class="video-grid">
-        <div class="empty-state">
-            <h3>No Subscriptions</h3>
-            <p>Subscribe to channels to see them here!</p>
-        </div>
-    </div>
-</section>
-
-<section id="offline-page" class="page">
-    <h2>Offline Videos</h2>
-    <div id="offlineGrid"></div>
-</section>
-
-<section id="player-page" class="page">
-    <button onclick="showPage('home')">← Back</button>
-    <div id="player"></div>
-    <h2 id="playerTitle"></h2>
-    <p id="playerChannel" class="video-channel"></p>
-</section>
+<!-- HOME PAGE -->
+<main id="home-page">
+  <div class="chips">
+    <div class="chip active" onclick="filterChip(this,'')">All</div>
+    <div class="chip" onclick="filterChip(this,'10')">Music</div>
+    <div class="chip" onclick="filterChip(this,'20')">Gaming</div>
+    <div class="chip" onclick="filterChip(this,'25')">News</div>
+    <div class="chip" onclick="filterChip(this,'28')">Science & Tech</div>
+    <div class="chip" onclick="filterChip(this,'17')">Sports</div>
+    <div class="chip" onclick="filterChip(this,'23')">Comedy</div>
+    <div class="chip" onclick="filterChip(this,'1')">Film & Animation</div>
+    <div class="chip" onclick="filterChip(this,'27')">Education</div>
+    <div class="chip" onclick="filterChip(this,'19')">Travel</div>
+    <div class="chip" onclick="filterChip(this,'26')">Style</div>
+    <div class="chip" onclick="filterChip(this,'2')">Autos</div>
+  </div>
+  <div id="video-grid" class="video-grid"></div>
 </main>
+
+<!-- PLAYER PAGE -->
+<div id="player-page">
+  <div class="player-layout">
+    <div class="player-main">
+
+      <!-- PLAYER: uses Invidious to bypass Error 153 embedding restrictions -->
+      <div class="player-container" id="player-container">
+        <iframe
+          id="player-iframe"
+          allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+          allowfullscreen
+          sandbox="allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox"
+        ></iframe>
+
+        <!-- Shown if all embed instances fail -->
+        <div class="player-fallback" id="player-fallback">
+          <svg width="52" height="52" viewBox="0 0 24 24" fill="var(--accent)">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+          </svg>
+          <p id="fallback-msg">Embedding is blocked for this video by the uploader.</p>
+          <a id="yt-link" href="#" target="_blank" rel="noopener" class="watch-yt-btn">
+            ▶ &nbsp;Watch on YouTube
+          </a>
+        </div>
+      </div>
+
+      <!-- VIDEO INFO -->
+      <div class="video-title-box">
+        <div class="video-title" id="player-title">Loading...</div>
+      </div>
+      <div class="video-meta-row">
+        <div class="meta-left" id="player-meta"></div>
+        <div class="action-btns">
+          <button class="action-btn like-left" id="like-btn" onclick="toggleLike(this)">
+            <svg viewBox="0 0 24 24"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>
+            <span id="like-count">Like</span>
+          </button>
+          <button class="action-btn dislike-right" onclick="showToast('👎 Disliked')">
+            <svg viewBox="0 0 24 24"><path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v2c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L9.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm4 0v12h4V3h-4z"/></svg>
+          </button>
+          <button class="action-btn" onclick="copyLink()">
+            <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
+            Share
+          </button>
+          <button class="action-btn" onclick="showToast('🕐 Saved!')">
+            <svg viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
+            Save
+          </button>
+          <!-- DOWNLOAD DROPDOWN -->
+          <div class="dl-wrap" id="dl-wrap">
+            <button class="action-btn dl-btn" onclick="toggleDlMenu(event)">
+              <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+              Download ▾
+            </button>
+            <div class="dl-menu" id="dl-menu">
+              <div class="dl-opt" onclick="doDownload('22')">
+                <span>720p MP4 (HD)</span><span class="dl-badge green">HD</span>
+              </div>
+              <div class="dl-opt" onclick="doDownload('18')">
+                <span>360p MP4</span><span class="dl-badge">SD</span>
+              </div>
+              <div class="dl-opt" onclick="doDownload('140')">
+                <span>Audio only M4A</span><span class="dl-badge">🎵</span>
+              </div>
+              <div style="border-top:1px solid var(--border);margin:6px 0"></div>
+              <div class="dl-opt" onclick="openCobalt()">
+                <span>Open cobalt.tools</span><span class="dl-badge">↗</span>
+              </div>
+              <div class="dl-opt" onclick="openYtDl()">
+                <span>y2mate download</span><span class="dl-badge">↗</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHANNEL ROW -->
+      <div class="channel-row">
+        <div class="channel-info">
+          <div class="channel-avatar" id="ch-avatar"></div>
+          <div>
+            <div class="channel-name" id="channel-name"></div>
+            <div class="channel-subs" id="channel-subs"></div>
+          </div>
+        </div>
+        <button class="subscribe-btn" id="subscribe-btn" onclick="toggleSubscribe(this)">Subscribe</button>
+      </div>
+
+      <!-- DESCRIPTION -->
+      <div class="desc-box collapsed" id="desc-box" onclick="toggleDesc()">Loading description...</div>
+      <span class="desc-toggle" onclick="toggleDesc()" id="desc-toggle">▼ Show more</span>
+
+      <!-- COMMENTS -->
+      <div class="comments-section">
+        <div class="comments-title" id="comments-title">Comments</div>
+        <div id="comments-container"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- RELATED VIDEOS -->
+    <div class="related-sidebar">
+      <div class="related-title">Up Next</div>
+      <div id="related-videos"><div class="spinner"></div></div>
+    </div>
+  </div>
 </div>
 
-<div id="downloadModal" class="download-modal">
-    <div class="modal-content">
-        <h3>Download Video</h3>
-        <p id="downloadTitle"></p>
-        <div id="qualityOptions" class="quality-options"></div>
-        <div class="progress-container" style="display:none">
-            <div id="progressBar" class="progress-bar"></div>
-        </div>
-        <div id="statusMessage" class="status-message" style="display:none"></div>
-        <div class="modal-actions">
-            <button onclick="closeDownloadModal()">Cancel</button>
-        </div>
-    </div>
-</div>
-
-<div id="loadingOverlay" class="loading-overlay" style="display:none">
-    <div class="loading-content">
-        <div class="spinner"></div>
-        <h3 id="loadingText">Downloading Video...</h3>
-        <p id="loadingSubtext">This may take a minute</p>
-        <div class="progress-container">
-            <div id="globalProgressBar" class="progress-bar"></div>
-        </div>
-    </div>
-</div>
+<div class="toast" id="toast"></div>
 
 <script>
-// API Keys (Note: In production, these should be handled by a backend server)
-const YOUTUBE_API_KEY = "AIzaSyDqYX24XCcn9g9EPDHalINE0j6IkkTwKW4";
-const APIFY_API_TOKEN = "apify_api_u8g8fMN6iwqMItpqS1bdfpUL7vJ63B4uxPwB";
+// ── CONFIG ──────────────────────────────────────────────────────────────────
+const API_KEY = 'AIzaSyDqYX24XCcn9g9EPDHalINE0j6IkkTwKW4';
+const YT_BASE = 'https://www.googleapis.com/youtube/v3';
 
-let subs = new Set(JSON.parse(localStorage.getItem("subs") || "[]"));
-let offline = JSON.parse(localStorage.getItem("offline") || "[]");
-let currentDownloadVideo = null;
-let activeDownloads = new Map();
+// Public Invidious instances — tried in order as fallbacks
+// These are free, open-source YouTube frontends that support embedding
+// Videos blocked on YouTube's own embed (Error 153) usually work here
+const INV = [
+  'https://invidious.snopyta.org',
+  'https://yewtu.be',
+  'https://invidious.kavin.rocks',
+  'https://inv.riverside.rocks',
+  'https://vid.puffyan.us',
+  'https://invidious.tiekoetter.com',
+];
+let invIdx = 0;
 
-function showPage(p) {
-    document.querySelectorAll(".page").forEach(x => x.classList.remove("active"));
-    document.querySelectorAll(".nav-item").forEach(x => x.classList.remove("active"));
-    document.getElementById(p + "-page").classList.add("active");
-    document.querySelector(`[onclick="showPage('${p}')"]`)?.classList.add("active");
-    if (p === "subs") loadSubs();
-    if (p === "offline") loadOffline();
-}
+let videoId = null;
+let videoTitle = '';
+let liked = false;
 
-async function loadHome(q = "trending music") {
-    const grid = document.getElementById("homeGrid");
-    grid.innerHTML = '<div class="spinner"></div>';
-    try {
-        const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${encodeURIComponent(q)}&maxResults=12&key=${YOUTUBE_API_KEY}`);
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        const data = await res.json();
-        if (data.error) throw new Error(data.error.message);
-        render(grid, data.items);
-    } catch (error) {
-        console.error('Error loading videos:', error);
-        grid.innerHTML = `<p style="text-align:center;color:#f44336">Error loading videos. Please try again.<br><small>${error.message}</small></p>`;
-    }
-}
-
-function render(grid, items) {
-    if (!items || items.length === 0) {
-        grid.innerHTML = '<p style="text-align:center">No videos found. Try a different search.</p>';
-        return;
-    }
-    
-    grid.innerHTML = "";
-    items.forEach(v => {
-        const id = v.id.videoId || v.id;
-        const ch = v.snippet.channelId;
-        const isOffline = offline.find(o => o.id === id);
-        
-        const card = document.createElement("div");
-        card.className = "video-card";
-        card.innerHTML = `
-            <img src="${v.snippet.thumbnails.medium?.url || v.snippet.thumbnails.default?.url}" alt="${v.snippet.title}" onerror="this.src='https://via.placeholder.com/320x180/333/fff?text=No+Thumbnail'">
-            <div class="video-info">
-                <b>${v.snippet.title}</b>
-                <div class="video-channel">${v.snippet.channelTitle}</div>
-                <div class="actions">
-                    <button class="${subs.has(ch) ? "subscribed" : ""}"
-                        onclick="toggleSub('${ch}','${v.snippet.channelTitle.replace(/'/g, "\\'")}',event)">
-                        ${subs.has(ch) ? "✓ Subscribed" : "Subscribe"}
-                    </button>
-                    <button class="${isOffline ? "offline" : ""}"
-                        onclick='openDownloadModal(${JSON.stringify(v).replace(/'/g, "\\'")},"${id}",event)'>
-                        ${isOffline ? "✓ Downloaded" : "Download"}
-                    </button>
-                </div>
-            </div>`;
-        card.onclick = e => {
-            if (!e.target.closest(".actions")) {
-                play(id, v.snippet.title, v.snippet.channelTitle);
-            }
-        };
-        grid.appendChild(card);
-    });
-}
-
-function toggleSub(id, channelTitle, e) {
-    e.stopPropagation();
-    if (subs.has(id)) {
-        subs.delete(id);
-        showToast(`Unsubscribed from ${channelTitle}`, 'info');
-    } else {
-        subs.add(id);
-        showToast(`Subscribed to ${channelTitle}!`, 'success');
-    }
-    localStorage.setItem("subs", JSON.stringify([...subs]));
-    loadHome(document.getElementById("searchInput").value || "trending music");
-}
-
-function openDownloadModal(video, videoId, e) {
-    e.stopPropagation();
-    const isOffline = offline.find(o => o.id === videoId);
-    if (isOffline) {
-        showToast('Video already downloaded!', 'success');
-        return;
-    }
-    
-    currentDownloadVideo = { video, videoId };
-    document.getElementById("downloadTitle").innerText = video.snippet.title;
-    document.getElementById("downloadModal").classList.add("active");
-    document.getElementById("statusMessage").style.display = "none";
-    document.querySelector(".progress-container").style.display = "none";
-    document.getElementById("progressBar").style.width = "0%";
-    
-    const qualityOptions = document.getElementById("qualityOptions");
-    qualityOptions.innerHTML = `
-        <button class="quality-btn" onclick="startDownload('720p')">
-            <div>HD 720p</div>
-            <div class="quality-info">High quality, medium file size</div>
-        </button>
-        <button class="quality-btn" onclick="startDownload('480p')">
-            <div>SD 480p</div>
-            <div class="quality-info">Good quality, smaller file size</div>
-        </button>
-        <button class="quality-btn" onclick="startDownload('360p')">
-            <div>360p</div>
-            <div class="quality-info">Lower quality, smallest file size</div>
-        </button>
-    `;
-}
-
-function closeDownloadModal() {
-    document.getElementById("downloadModal").classList.remove("active");
-    currentDownloadVideo = null;
-}
-
-async function startDownload(quality) {
-    if (!currentDownloadVideo) return;
-    
-    const { video, videoId } = currentDownloadVideo;
-    const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
-    
-    // Show loading overlay
-    document.getElementById("loadingOverlay").style.display = "flex";
-    document.getElementById("loadingText").innerText = "Starting download...";
-    document.getElementById("loadingSubtext").innerText = "Preparing to download your video";
-    document.getElementById("globalProgressBar").style.width = "5%";
-    
-    try {
-        // Prepare Apify API request
-        const input = {
-            "videos": [
-                {
-                    "url": youtubeUrl
-                }
-            ],
-            "preferredQuality": quality,
-            "filenameTemplateParts": ["title"]
-        };
-        
-        document.getElementById("loadingText").innerText = "Initializing Apify download...";
-        document.getElementById("globalProgressBar").style.width = "15%";
-        
-        // Start the Apify actor run
-        const runResponse = await fetch(`https://api.apify.com/v2/acts/streamers~youtube-video-downloader/runs?token=${APIFY_API_TOKEN}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(input)
-        });
-        
-        if (!runResponse.ok) {
-            throw new Error(`Failed to start download: ${runResponse.status}`);
-        }
-        
-        const runData = await runResponse.json();
-        const runId = runData.data.id;
-        
-        document.getElementById("loadingText").innerText = "Processing video...";
-        document.getElementById("loadingSubtext").innerText = "This may take 30-60 seconds";
-        document.getElementById("globalProgressBar").style.width = "30%";
-        
-        // Poll for completion
-        let downloadUrl = null;
-        let attempts = 0;
-        const maxAttempts = 60; // Max 2 minutes
-        
-        while (attempts < maxAttempts) {
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            
-            const statusResponse = await fetch(`https://api.apify.com/v2/acts/streamers~youtube-video-downloader/runs/${runId}?token=${APIFY_API_TOKEN}`);
-            const statusData = await statusResponse.json();
-            
-            if (statusData.data.status === 'SUCCEEDED') {
-                document.getElementById("globalProgressBar").style.width = "70%";
-                
-                // Get the dataset items
-                const datasetId = statusData.data.defaultDatasetId;
-                const datasetResponse = await fetch(`https://api.apify.com/v2/datasets/${datasetId}/items?token=${APIFY_API_TOKEN}`);
-                const items = await datasetResponse.json();
-                
-                if (items && items.length > 0 && items[0].downloadUrl) {
-                    downloadUrl = items[0].downloadUrl;
-                    break;
-                }
-            } else if (statusData.data.status === 'FAILED') {
-                throw new Error('Video processing failed on Apify server');
-            }
-            
-            attempts++;
-            const progress = 30 + Math.min(40, (attempts * 40 / maxAttempts));
-            document.getElementById("globalProgressBar").style.width = `${progress}%`;
-            document.getElementById("loadingSubtext").innerText = `Processing... ${attempts * 2}s elapsed`;
-        }
-        
-        if (!downloadUrl) {
-            throw new Error('Download URL not available after processing');
-        }
-        
-        document.getElementById("loadingText").innerText = "Downloading video file...";
-        document.getElementById("globalProgressBar").style.width = "80%";
-        
-        // Download the video
-        const videoResponse = await fetch(downloadUrl);
-        if (!videoResponse.ok) {
-            throw new Error(`Failed to fetch video from ${downloadUrl}`);
-        }
-        
-        const blob = await videoResponse.blob();
-        
-        // Create object URL for offline playback
-        const blobUrl = URL.createObjectURL(blob);
-        
-        // Save to offline storage
-        const offlineEntry = {
-            id: videoId,
-            snippet: video.snippet,
-            quality: quality,
-            downloadedAt: new Date().toISOString(),
-            url: youtubeUrl,
-            blobUrl: blobUrl,
-            filename: `${video.snippet.title.replace(/[^a-z0-9]/gi, '_').substring(0, 50)}.mp4`,
-            size: blob.size,
-            type: blob.type
-        };
-        
-        offline.push(offlineEntry);
-        localStorage.setItem("offline", JSON.stringify(offline));
-        
-        document.getElementById("globalProgressBar").style.width = "100%";
-        document.getElementById("loadingText").innerText = "Download complete!";
-        document.getElementById("loadingSubtext").innerText = "Video saved to offline library";
-        
-        // Close modals and update UI
-        setTimeout(() => {
-            document.getElementById("loadingOverlay").style.display = "none";
-            closeDownloadModal();
-            loadHome(document.getElementById("searchInput").value || "trending music");
-            loadOffline();
-            showToast(`"${video.snippet.title.substring(0, 50)}..." downloaded successfully!`, 'success');
-        }, 1000);
-        
-    } catch (error) {
-        console.error('Download error:', error);
-        document.getElementById("loadingOverlay").style.display = "none";
-        showToast(`Download failed: ${error.message}`, 'error');
-        
-        // Show retry option in modal
-        const statusEl = document.getElementById("statusMessage");
-        statusEl.style.display = "block";
-        statusEl.className = "status-message error";
-        statusEl.innerHTML = `
-            Download failed: ${error.message}<br>
-            <button onclick="startDownload('${quality}')" style="margin-top:10px;background:var(--red)">Retry Download</button>
-        `;
-    }
-}
-
-function loadOffline() {
-    const grid = document.getElementById("offlineGrid");
-    if (offline.length === 0) {
-        grid.innerHTML = '<div class="empty-state"><h3>No Offline Videos</h3><p>Download videos to watch them offline!</p></div>';
-        return;
-    }
-    
-    grid.innerHTML = "";
-    offline.forEach((v, index) => {
-        const sizeMB = v.size ? ` • ${(v.size / (1024 * 1024)).toFixed(1)}MB` : '';
-        const item = document.createElement("div");
-        item.className = "offline-item";
-        item.innerHTML = `
-            <div onclick="playOffline(${index})" style="cursor:pointer;flex:1;display:flex;align-items:center;gap:15px">
-                <img src="${v.snippet.thumbnails?.medium?.url || v.snippet.thumbnails?.default?.url || 'https://via.placeholder.com/80x60/333/fff?text=No+Thumb'}" 
-                     style="width:80px;height:60px;border-radius:4px;object-fit:cover" 
-                     alt="${v.snippet.title}">
-                <div>
-                    <b style="font-size:14px">${v.snippet.title}</b>
-                    <div class="video-channel">${v.snippet.channelTitle} • ${v.quality} • ${new Date(v.downloadedAt).toLocaleDateString()}${sizeMB}</div>
-                </div>
-            </div>
-            <div style="display:flex;gap:8px;">
-                <button onclick="downloadFile(${index})" style="background:#4285F4">Save File</button>
-                <button class="delete-btn" onclick="deleteOffline(${index}, event)">Delete</button>
-            </div>
-        `;
-        grid.appendChild(item);
-    });
-}
-
-function playOffline(index) {
-    const video = offline[index];
-    if (!video) return;
-    
-    showPage("player");
-    
-    if (video.blobUrl) {
-        // Play from downloaded blob
-        document.getElementById("player").innerHTML = `
-            <video controls autoplay style="width:100%;height:100%">
-                <source src="${video.blobUrl}" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>`;
-    } else {
-        // Fallback to YouTube embed
-        document.getElementById("player").innerHTML = `
-            <iframe src="https://www.youtube.com/embed/${video.id}?autoplay=1"
-            allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
-    }
-    
-    document.getElementById("playerTitle").innerText = video.snippet.title;
-    document.getElementById("playerChannel").innerText = video.snippet.channelTitle;
-}
-
-function downloadFile(index) {
-    const video = offline[index];
-    if (!video || !video.blobUrl) return;
-    
-    const a = document.createElement('a');
-    a.href = video.blobUrl;
-    a.download = video.filename || `video_${video.id}.mp4`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    
-    showToast(`"${video.snippet.title.substring(0, 30)}..." saved to downloads`, 'success');
-}
-
-function deleteOffline(index, e) {
-    if (e) e.stopPropagation();
-    if (confirm("Delete this offline video? This cannot be undone.")) {
-        // Revoke blob URL to free memory
-        if (offline[index].blobUrl) {
-            URL.revokeObjectURL(offline[index].blobUrl);
-        }
-        
-        offline.splice(index, 1);
-        localStorage.setItem("offline", JSON.stringify(offline));
-        loadOffline();
-        showToast('Video removed from offline library', 'info');
-    }
-}
-
-function loadSubs() {
-    const grid = document.getElementById("subsGrid");
-    if (subs.size === 0) {
-        grid.innerHTML = '<div class="empty-state"><h3>No Subscriptions</h3><p>Subscribe to channels to see them here!</p></div>';
-        return;
-    }
-    
-    grid.innerHTML = `
-        <div class="empty-state">
-            <h3>${subs.size} Channel${subs.size === 1 ? '' : 's'} Subscribed</h3>
-            <p>Your subscribed channels appear on the Home page</p>
-            <p><small>Subscribed Channel IDs: ${Array.from(subs).slice(0, 3).join(', ')}${subs.size > 3 ? '...' : ''}</small></p>
-        </div>
-    `;
-}
-
-function play(id, title, channel) {
-    showPage("player");
-    document.getElementById("player").innerHTML = `
-        <iframe src="https://www.youtube.com/embed/${id}?autoplay=1"
-        allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
-    document.getElementById("playerTitle").innerText = title;
-    document.getElementById("playerChannel").innerText = channel;
-}
-
-function search() {
-    const query = document.getElementById("searchInput").value.trim();
-    if (query) {
-        loadHome(query);
-    } else {
-        loadHome("trending music");
-    }
-}
-
-function showToast(message, type = 'info') {
-    // Remove existing toast
-    const existingToast = document.querySelector('.toast');
-    if (existingToast) existingToast.remove();
-    
-    // Create new toast
-    const toast = document.createElement('div');
-    toast.className = `toast`;
-    toast.style.background = type === 'success' ? '#4caf50' : 
-                            type === 'error' ? '#f44336' : '#2196f3';
-    toast.innerText = message;
-    document.body.appendChild(toast);
-    
-    // Auto remove after 3 seconds
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transition = 'opacity 0.3s';
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
-}
-
-// Initialize the app
-window.onload = () => {
-    loadHome();
-    
-    // Show welcome message
-    setTimeout(() => {
-        showToast('Welcome to Kaitube! Click Download on any video to save it offline.', 'info');
-    }, 1500);
+// ── HELPERS ──────────────────────────────────────────────────────────────────
+const fv = n => {
+  n = parseInt(n)||0;
+  if(n>=1e9) return (n/1e9).toFixed(1)+'B views';
+  if(n>=1e6) return (n/1e6).toFixed(1)+'M views';
+  if(n>=1e3) return Math.round(n/1e3)+'K views';
+  return n+' views';
+};
+const fc = n => {
+  n = parseInt(n)||0;
+  if(n>=1e9) return (n/1e9).toFixed(1)+'B';
+  if(n>=1e6) return (n/1e6).toFixed(1)+'M';
+  if(n>=1e3) return Math.round(n/1e3)+'K';
+  return String(n);
+};
+const ta = d => {
+  const ms = Date.now()-new Date(d);
+  const s=ms/1e3,m=s/60,h=m/60,dy=h/24,w=dy/7,mo=dy/30,y=dy/365;
+  if(y>=1) return Math.floor(y)+'y ago';
+  if(mo>=1) return Math.floor(mo)+'mo ago';
+  if(w>=1) return Math.floor(w)+'w ago';
+  if(dy>=1) return Math.floor(dy)+'d ago';
+  if(h>=1) return Math.floor(h)+'h ago';
+  return Math.max(1,Math.floor(m))+'m ago';
+};
+const pd = iso => {
+  if(!iso) return '';
+  const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/)||[];
+  const h=parseInt(m[1]||0),mn=parseInt(m[2]||0),s=parseInt(m[3]||0);
+  return h ? `${h}:${String(mn).padStart(2,'0')}:${String(s).padStart(2,'0')}` : `${mn}:${String(s).padStart(2,'0')}`;
+};
+const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+const grd = s => {
+  const h=[...String(s)].reduce((a,c)=>a+c.charCodeAt(0),0);
+  const p=[
+    ['#ff4444','#aa0000'],['#44aaff','#0044aa'],['#44ff88','#00aa44'],
+    ['#ffaa00','#ff5500'],['#aa44ff','#5500aa'],['#ff44aa','#aa0055'],
+    ['#00ccff','#0055cc'],['#ff8800','#cc2200'],
+  ];
+  const c=p[h%p.length];
+  return `linear-gradient(135deg,${c[0]},${c[1]})`;
 };
 
-// Clean up blob URLs on page unload
-window.addEventListener('beforeunload', () => {
-    offline.forEach(video => {
-        if (video.blobUrl) {
-            URL.revokeObjectURL(video.blobUrl);
-        }
-    });
-});
-</script>
+let _toastT;
+function showToast(msg,ms=3000) {
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(_toastT);
+  _toastT=setTimeout(()=>el.classList.remove('show'),ms);
+}
 
+function setNav(id) {
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const el=document.getElementById(id);
+  if(el) el.classList.add('active');
+}
+
+// ── SKELETONS ────────────────────────────────────────────────────────────────
+function showSkeletons(n=12) {
+  document.getElementById('video-grid').innerHTML = Array(n).fill(
+    `<div class="skeleton"><div class="skel-thumb"></div>
+     <div class="skel-line" style="margin-top:14px"></div>
+     <div class="skel-line short"></div></div>`
+  ).join('');
+}
+
+// ── GRID FETCH ───────────────────────────────────────────────────────────────
+async function fetchVideos(query='', catId='') {
+  showSkeletons();
+  try {
+    let items;
+    if(query) {
+      const r = await fetch(`${YT_BASE}/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=24&key=${API_KEY}`);
+      const d = await r.json();
+      if(!d.items?.length) throw new Error('No results found');
+      const ids = d.items.map(i=>i.id?.videoId).filter(Boolean).join(',');
+      const r2 = await fetch(`${YT_BASE}/videos?part=snippet,contentDetails,statistics&id=${ids}&key=${API_KEY}`);
+      const d2 = await r2.json();
+      items = d2.items||[];
+    } else {
+      const url = `${YT_BASE}/videos?part=snippet,contentDetails,statistics&chart=mostPopular${catId?'&videoCategoryId='+catId:''}&maxResults=24&key=${API_KEY}`;
+      const r = await fetch(url);
+      const d = await r.json();
+      items = d.items||[];
+    }
+    if(!items.length) throw new Error('No videos found');
+    renderGrid(items);
+  } catch(e) {
+    document.getElementById('video-grid').innerHTML =
+      `<div class="error-msg"><h2>Error</h2><p>${esc(e.message)}</p></div>`;
+  }
+}
+
+function renderGrid(items) {
+  document.getElementById('video-grid').innerHTML = items.map(item => {
+    const s=item.snippet||{}, st=item.statistics||{}, cd=item.contentDetails||{};
+    const id = typeof item.id==='object' ? item.id.videoId : item.id;
+    if(!id) return '';
+    const thumb = (s.thumbnails?.maxres||s.thumbnails?.high||s.thumbnails?.medium||{}).url||'';
+    const d=pd(cd.duration), v=fv(st.viewCount), a=ta(s.publishedAt);
+    const t=esc(s.title||''), ch=esc(s.channelTitle||'');
+    return `<div class="video-card" onclick="openVideo('${id}','${t.replace(/'/g,"\\'")}')">
+      <div class="thumb-wrap">
+        ${thumb?`<img src="${thumb}" loading="lazy" alt="">`:''}
+        ${d?`<div class="duration">${d}</div>`:''}
+      </div>
+      <div class="card-info">
+        <div class="ch-avatar" style="background:${grd(s.channelTitle||id)}"></div>
+        <div class="card-text">
+          <h3>${t}</h3>
+          <p>${ch}${v?' · '+v:''}${a?' · '+a:''}</p>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── PLAYER ───────────────────────────────────────────────────────────────────
+// Strategy: use Invidious embed URL which bypasses YouTube's embedding lock (Error 153).
+// Invidious is 100% open-source and legal. If one instance is down, try the next.
+
+function getEmbedUrl(vid, idx) {
+  return `${INV[idx]}/embed/${vid}?autoplay=1&dark_mode=1&modestbranding=1`;
+}
+
+async function openVideo(id, title) {
+  videoId = id;
+  videoTitle = title;
+  liked = false;
+  invIdx = 0;
+
+  document.getElementById('home-page').style.display = 'none';
+  document.getElementById('player-page').style.display = 'block';
+  window.scrollTo(0,0);
+
+  // Reset
+  document.getElementById('player-title').textContent = title||'Loading...';
+  document.getElementById('player-meta').textContent = '';
+  document.getElementById('channel-name').textContent = '';
+  document.getElementById('channel-subs').textContent = '';
+  document.getElementById('desc-box').textContent = 'Loading...';
+  document.getElementById('desc-box').classList.add('collapsed');
+  document.getElementById('desc-toggle').textContent = '▼ Show more';
+  document.getElementById('like-count').textContent = 'Like';
+  document.getElementById('like-btn').classList.remove('liked');
+  document.getElementById('comments-container').innerHTML = '<div class="spinner"></div>';
+  document.getElementById('related-videos').innerHTML = '<div class="spinner"></div>';
+  document.getElementById('player-fallback').classList.remove('show');
+
+  // Set Invidious embed
+  const iframe = document.getElementById('player-iframe');
+  iframe.src = getEmbedUrl(id, 0);
+
+  // Set YouTube fallback link
+  document.getElementById('yt-link').href = `https://www.youtube.com/watch?v=${id}`;
+
+  // Load details + comments + related in parallel
+  loadDetails(id);
+  fetchRelated(id, title);
+  fetchComments(id);
+}
+
+// If iframe posts an error message or user triggers a try-next
+function tryNextInstance() {
+  invIdx++;
+  if(invIdx >= INV.length) {
+    showFallback();
+    return;
+  }
+  showToast(`Trying mirror ${invIdx+1}/${INV.length}...`);
+  document.getElementById('player-iframe').src = getEmbedUrl(videoId, invIdx);
+}
+
+function showFallback() {
+  document.getElementById('player-fallback').classList.add('show');
+  document.getElementById('fallback-msg').textContent =
+    'All embed mirrors tried. This video restricts external playback. Click below to watch on YouTube.';
+}
+
+async function loadDetails(id) {
+  try {
+    const r = await fetch(`${YT_BASE}/videos?part=snippet,statistics&id=${id}&key=${API_KEY}`);
+    const d = await r.json();
+    const v = d.items?.[0]; if(!v) return;
+    const s=v.snippet||{}, st=v.statistics||{};
+    document.getElementById('player-title').textContent = s.title||videoTitle;
+    document.getElementById('player-meta').textContent = `${fv(st.viewCount)} · ${ta(s.publishedAt)}`;
+    document.getElementById('like-count').textContent = fc(st.likeCount)||'Like';
+    document.getElementById('channel-name').textContent = s.channelTitle||'';
+    document.getElementById('ch-avatar').style.background = grd(s.channelTitle||id);
+    document.getElementById('desc-box').textContent = s.description||'No description.';
+    document.getElementById('comments-title').textContent = `${fc(st.commentCount)} Comments`;
+    if(s.channelId) loadChannelSubs(s.channelId);
+  } catch(e) { console.error(e); }
+}
+
+async function loadChannelSubs(cid) {
+  try {
+    const r = await fetch(`${YT_BASE}/channels?part=statistics&id=${cid}&key=${API_KEY}`);
+    const d = await r.json();
+    const sub = d.items?.[0]?.statistics?.subscriberCount;
+    if(sub) document.getElementById('channel-subs').textContent = fc(sub)+' subscribers';
+  } catch(e) {}
+}
+
+// ── RELATED VIDEOS ─────────────────────────────────────────────────────────
+// NOTE: relatedToVideoId was deprecated in YouTube Data API v3 (June 2023).
+// We work around this by searching using keywords from the video title.
+async function fetchRelated(id, title) {
+  const cont = document.getElementById('related-videos');
+  try {
+    // Use first 4 significant words as search query
+    const kw = (title||'').replace(/[^\w\s]/g,'').split(/\s+/).filter(w=>w.length>3).slice(0,4).join(' ') || title;
+    const r = await fetch(`${YT_BASE}/search?part=snippet&q=${encodeURIComponent(kw)}&type=video&maxResults=18&key=${API_KEY}`);
+    const d = await r.json();
+    if(!d.items?.length) { cont.innerHTML='<p style="color:var(--text3)">No suggestions found.</p>'; return; }
+
+    const ids = d.items.map(i=>i.id?.videoId).filter(Boolean).join(',');
+    let dets = {};
+    if(ids) {
+      const r2 = await fetch(`${YT_BASE}/videos?part=contentDetails,statistics&id=${ids}&key=${API_KEY}`);
+      const d2 = await r2.json();
+      (d2.items||[]).forEach(i=>dets[i.id]=i);
+    }
+
+    cont.innerHTML = d.items
+      .filter(i=>i.id?.videoId && i.id.videoId!==id)
+      .slice(0,12)
+      .map(item => {
+        const s=item.snippet||{}, vid=item.id.videoId;
+        const det=dets[vid]||{};
+        const dv=pd(det.contentDetails?.duration), vw=fv(det.statistics?.viewCount);
+        const th=(s.thumbnails?.medium||s.thumbnails?.default||{}).url||'';
+        const t=esc(s.title||''), ch=esc(s.channelTitle||'');
+        const a=ta(s.publishedAt||'');
+        return `<div class="rel-card" onclick="openVideo('${vid}','${t.replace(/'/g,"\\'")}')">
+          <div class="rel-thumb">
+            ${th?`<img src="${th}" loading="lazy" alt="">`:''}
+            ${dv?`<div class="duration">${dv}</div>`:''}
+          </div>
+          <div class="rel-info">
+            <h4>${t}</h4>
+            <p>${ch}${vw?' · '+vw:''}${a?' · '+a:''}</p>
+          </div>
+        </div>`;
+      }).join('');
+  } catch(e) {
+    cont.innerHTML = '<p style="color:var(--text3)">Could not load suggestions.</p>';
+  }
+}
+
+// ── COMMENTS ─────────────────────────────────────────────────────────────────
+async function fetchComments(id) {
+  const cont = document.getElementById('comments-container');
+  try {
+    const r = await fetch(`${YT_BASE}/commentThreads?part=snippet&videoId=${id}&maxResults=20&order=relevance&key=${API_KEY}`);
+    const d = await r.json();
+    if(d.error || !d.items?.length) {
+      cont.innerHTML = `<p style="color:var(--text3)">${d.error ? 'Comments are disabled for this video.' : 'No comments yet.'}</p>`;
+      return;
+    }
+    const pals=['#4477ff,#aa33ff','#ff4444,#aa0000','#44aaff,#0044aa','#44ff88,#00aa44','#ffaa00,#ff5500','#ff44aa,#aa0055'];
+    cont.innerHTML = d.items.map(item => {
+      const c=item.snippet?.topLevelComment?.snippet||{};
+      const ci=[...(c.authorDisplayName||'?')].reduce((a,v)=>a+v.charCodeAt(0),0);
+      const lk=c.likeCount?fc(c.likeCount):'';
+      const a=c.publishedAt?ta(c.publishedAt):'';
+      const rc=item.snippet?.totalReplyCount||0;
+      return `<div class="comment">
+        <div class="comment-avatar" style="background:linear-gradient(135deg,${pals[ci%pals.length]})"></div>
+        <div class="comment-body">
+          <h4>${esc(c.authorDisplayName||'User')} <span style="color:var(--text3);font-weight:400;font-size:12px">${a}</span></h4>
+          <div class="comment-text">${esc(c.textDisplay||'')}</div>
+          <div class="comment-actions">
+            <span>👍 ${lk||'Like'}</span>
+            <span>👎</span>
+            ${rc?`<span>💬 ${rc} repl${rc>1?'ies':'y'}</span>`:''}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    cont.innerHTML = '<p style="color:var(--text3)">Could not load comments.</p>';
+  }
+}
+
+// ── DOWNLOAD ─────────────────────────────────────────────────────────────────
+// Uses Invidious /latest_version endpoint for direct video file downloads
+// itag 22 = 720p MP4, itag 18 = 360p MP4, itag 140 = audio M4A
+
+function toggleDlMenu(e) {
+  e.stopPropagation();
+  document.getElementById('dl-menu').classList.toggle('open');
+}
+document.addEventListener('click', () => {
+  document.getElementById('dl-menu')?.classList.remove('open');
+});
+
+function doDownload(itag) {
+  if(!videoId) { showToast('No video loaded'); return; }
+  const instance = INV[invIdx] || INV[0];
+  // Invidious direct download endpoint - works for public videos
+  const url = `${instance}/latest_version?id=${videoId}&itag=${itag}&local=true`;
+  showToast('⬇ Opening download...');
+  window.open(url, '_blank', 'noopener');
+  document.getElementById('dl-menu').classList.remove('open');
+}
+
+function openCobalt() {
+  if(!videoId) return;
+  // cobalt.tools is a free, open-source video downloader
+  window.open(`https://cobalt.tools/`, '_blank', 'noopener');
+  showToast('Paste the video link in cobalt.tools');
+  document.getElementById('dl-menu').classList.remove('open');
+}
+
+function openYtDl() {
+  if(!videoId) return;
+  window.open(`https://en.y2mate.is/youtube-to-mp4.html`, '_blank', 'noopener');
+  showToast('Paste the video link on the download site');
+  document.getElementById('dl-menu').classList.remove('open');
+}
+
+// ── NAVIGATION ───────────────────────────────────────────────────────────────
+function goHome() {
+  document.getElementById('player-page').style.display = 'none';
+  document.getElementById('home-page').style.display = 'block';
+  document.getElementById('player-iframe').src = '';
+  document.getElementById('search-input').value = '';
+  setNav('nav-home');
+  window.scrollTo(0,0);
+}
+
+function loadCategory(cat, el) {
+  const map = {trending:'',gaming:'20',music:'10',news:'25',sports:'17',science:'28'};
+  document.getElementById('player-page').style.display = 'none';
+  document.getElementById('home-page').style.display = 'block';
+  document.getElementById('player-iframe').src = '';
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  fetchVideos('', map[cat]||'');
+}
+
+function filterChip(el, catId) {
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  fetchVideos('', catId);
+}
+
+function handleSearch(e) {
+  e.preventDefault();
+  const q = document.getElementById('search-input').value.trim();
+  if(!q) return;
+  document.getElementById('player-page').style.display = 'none';
+  document.getElementById('home-page').style.display = 'block';
+  document.getElementById('player-iframe').src = '';
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  setNav('nav-home');
+  fetchVideos(q, '');
+}
+
+// ── INTERACTIONS ─────────────────────────────────────────────────────────────
+function toggleLike(btn) {
+  liked = !liked;
+  btn.classList.toggle('liked', liked);
+  showToast(liked ? '👍 Liked!' : 'Like removed');
+}
+function toggleSubscribe(btn) {
+  const s = btn.classList.toggle('subbed');
+  btn.textContent = s ? '✓ Subscribed' : 'Subscribe';
+  showToast(s ? '🔔 Subscribed!' : 'Unsubscribed');
+}
+function toggleDesc() {
+  const box = document.getElementById('desc-box');
+  const tog = document.getElementById('desc-toggle');
+  box.classList.toggle('collapsed');
+  tog.textContent = box.classList.contains('collapsed') ? '▼ Show more' : '▲ Show less';
+}
+function copyLink() {
+  if(!videoId) return;
+  const url = `https://www.youtube.com/watch?v=${videoId}`;
+  navigator.clipboard.writeText(url)
+    .then(()=>showToast('🔗 Link copied!'))
+    .catch(()=>showToast('Link: '+url));
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+fetchVideos();
+</script>
 </body>
 </html>
